@@ -1,0 +1,38 @@
+{
+    "name": "extension-migration-tool",
+    "version": "0.1.0",
+    "description": "Chrome extension migration toolkit — MV2 to MV3 manifest converter, API shimming, background script to service worker migration, and compatibility checks.",
+    "author": "Zovo <hello@zovo.one>",
+    "license": "MIT",
+    "keywords": [
+        "chrome-extension",
+        "migration",
+        "mv2-to-mv3",
+        "manifest-v3",
+        "converter",
+        "service-worker",
+        "manifest",
+        "upgrade",
+        "compatibility"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/theluckystrike/extension-migration-tool.git"
+    },
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "files": [
+        "dist",
+        "README.md",
+        "LICENSE"
+    ],
+    "scripts": {
+        "build": "tsc",
+        "test": "jest",
+        "prepublishOnly": "npm run build"
+    },
+    "devDependencies": {
+        "@types/chrome": "^0.0.260",
+        "typescript": "^5.3.3"
+    }
+}
