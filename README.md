@@ -1,124 +1,85 @@
-# extension-migration-tool — MV2 to MV3 Migration Helper
+# Extension Migration Tool
 
-[![npm](https://img.shields.io/npm/v/extension-migration-tool.svg)](https://www.npmjs.com/package/extension-migration-tool)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
-[![Zero Dependencies](https://img.shields.io/badge/dependencies-0-green.svg)]()
+A TypeScript library for migrating Chrome extensions from Manifest V2 to Manifest V3. Converts manifests, splits permissions, rewrites deprecated fields, and checks compatibility. Zero runtime dependencies.
 
-> **Built by [Zovo](https://zovo.one)** — migration for 18+ Chrome extensions
-
-**Convert Manifest V2 to V3, check compatibility, get migration warnings.** Identify deprecated APIs and get automated fix suggestions. Zero runtime dependencies.
-
-## 📦 Install
+INSTALL
 
 ```bash
 npm install extension-migration-tool
 ```
 
-## 🚀 Quick Start
+USAGE
 
 ```typescript
 import { ManifestConverter, CompatChecker } from 'extension-migration-tool';
 
-// Convert MV2 manifest to MV3
+// Convert an MV2 manifest object to MV3
 const mv3 = ManifestConverter.convert(mv2Manifest);
 
-// Check compatibility
-const issues = CompatChecker.check(mv2Manifest);
-
-// Get migration warnings
+// Get migration warnings before converting
 const warnings = ManifestConverter.getWarnings(mv2Manifest);
-console.log(warnings);
-// ['browser_action moved to action', 'storage.local changes needed']
+
+// Check a manifest for MV3 compatibility issues
+const issues = CompatChecker.check(manifest);
 ```
 
-## ✨ Features
+WHAT THE CONVERTER DOES
 
-### Manifest Conversion
+ManifestConverter.convert takes a plain MV2 manifest object and returns a new object with the following transformations applied.
+
+- Sets manifest_version to 3
+- Converts background.scripts to background.service_worker (uses the first script entry)
+- Renames browser_action and page_action to action
+- Converts web_accessible_resources from a flat string array to the MV3 object format
+- Converts content_security_policy from a string to the MV3 object format
+- Splits permissions into API permissions and host_permissions
+
+ManifestConverter.getWarnings returns an array of plain strings describing potential problems with the migration. It warns about multiple background scripts that need merging, persistent background pages, webRequestBlocking usage, and broad tabs permission.
+
+COMPATIBILITY CHECKER
+
+CompatChecker.check returns an array of issue objects, each with a severity field (error, warning, or info) and a message string.
+
+Errors it catches include missing manifest_version 3, leftover background.scripts, persistent background pages, browser_action or page_action still present, and webRequestBlocking in permissions. Warnings cover string-format content_security_policy and flat web_accessible_resources arrays. Info-level issues note host permissions that should be moved to the host_permissions key.
 
 ```typescript
-// Convert entire manifest
-const mv3Manifest = ManifestConverter.convert(mv2Manifest);
-
-// Convert specific fields
-const mv3Action = ManifestConverter.convertAction(mv2Manifest.browser_action);
-const mv3Background = ManifestConverter.convertBackground(mv2Manifest.background);
-const mv3Permissions = ManifestConverter.convertPermissions(mv2Manifest.permissions);
-```
-
-### Compatibility Checking
-
-```typescript
-// Check full manifest
 const issues = CompatChecker.check(manifest);
 
-console.log(issues);
-/*
-{
-  critical: [
-    { field: 'background.page', message: 'Use service_worker instead' }
-  ],
-  warnings: [
-    { field: 'browser_action', message: 'Use action instead' }
-  ],
-  info: []
-}
-*/
-
-// Check specific field
-const fieldIssues = CompatChecker.checkField('permissions', manifest.permissions);
-```
-
-### Migration Warnings
-
-```typescript
-// Get all warnings before migration
-const warnings = ManifestConverter.getWarnings(manifest);
-
-/*
-[
-  { type: 'action', message: 'browser_action → action', severity: 'critical' },
-  { type: 'background', message: 'background.page → background.service_worker', severity: 'critical' },
-  { type: 'storage', message: 'Consider chrome.storage.session', severity: 'warning' },
-]
-*/
-```
-
-### Automated Fixes
-
-```typescript
-// Get fix suggestions
-const fixes = ManifestConverter.getFixes(manifest);
-
-fixes.forEach(fix => {
-    console.log(`${fix.field}: ${fix.suggestion}`);
+issues.forEach(issue => {
+  console.log(`[${issue.severity}] ${issue.message}`);
 });
-/*
-browser_action: Replace with "action"
-background.page: Replace with "service_worker"
-*/
+// [error] background.scripts must be replaced with background.service_worker
+// [warning] content_security_policy must be an object in MV3
+// [info] 2 host permission(s) should be moved to host_permissions
 ```
 
-## API Reference
+API REFERENCE
 
-### `ManifestConverter`
+ManifestConverter (static methods)
 
-| Method | Description |
-|--------|-------------|
-| `convert(manifest)` | Convert full manifest |
-| `convertAction(action)` | Convert browser_action |
-| `convertBackground(background)` | Convert background |
-| `convertPermissions(perms)` | Convert permissions |
-| `getWarnings(manifest)` | Get migration warnings |
-| `getFixes(manifest)` | Get fix suggestions |
+- convert(mv2) returns a new MV3 manifest object
+- getWarnings(mv2) returns an array of warning strings
 
-### `CompatChecker`
+CompatChecker (static methods)
 
-| Method | Description |
-|--------|-------------|
-| `check(manifest)` | Check full manifest |
-| `checkField(field, value)` | Check specific field |
+- check(manifest) returns an array of { severity, message } objects
 
-## 📄 License
+DEVELOPMENT
 
-MIT — [Zovo](https://zovo.one)
+```bash
+git clone https://github.com/theluckystrike/extension-migration-tool.git
+cd extension-migration-tool
+npm install
+npm run build
+npm test
+```
+
+The project uses TypeScript 5.x targeting ES2020 with CommonJS output. Type declarations and source maps are generated in the dist directory.
+
+LICENSE
+
+MIT. See the LICENSE file for details.
+
+---
+
+Built by theluckystrike / zovo.one
